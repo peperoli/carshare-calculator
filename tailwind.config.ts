@@ -18,5 +18,8 @@ export default {
       },
     },
   },
+  corePlugins: {
+    container: false,
+  },
   plugins: [],
 } satisfies Config;
