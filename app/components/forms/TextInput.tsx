@@ -7,7 +7,7 @@ export function TextInput({
   placeholder,
 }: {
   type?: 'text' | 'date' | 'number'
-  field: FieldMetadata<string | number>
+  field: FieldMetadata<string | number | null>
   label: string
   placeholder?: string
 }) {
@@ -18,7 +18,7 @@ export function TextInput({
         {...getInputProps(field, { type })}
         key={field.key}
         placeholder={placeholder}
-        className="p-2 block w-full"
+        className="p-2 block w-full bg-gray-200"
       />
       <p className="text-sm text-red-700">{field.errors}</p>
     </fieldset>

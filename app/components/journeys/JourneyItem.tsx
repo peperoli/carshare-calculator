@@ -1,17 +1,49 @@
 import type { Tables } from 'database.types'
+import { Modal } from '../shared/Modal'
+import { JourneyForm } from './JourneyForm'
 
 export function JourneyItem({
   journey,
 }: {
   journey: Tables<'journeys'> & { members: Tables<'members'>[]; car: Tables<'cars'> }
 }) {
+  const journeyCost = (journey.fuel_cost / 100) * journey.distance * journey.car.consumption
+  const costFormatter = new Intl.NumberFormat('de-CH', {
+    style: 'currency',
+    currency: 'CHF',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+
   return (
-    <li className="border border-gray-100 p-4">
-      <a href={`/journeys/${journey.id}`}>
-        {journey.date} | {journey.name} | {journey.distance} km |{' '}
-        {journey.members.map(member => member.name).join(', ')} | {journey.car.name} |{' '}
-        {Math.round(journey.fuel_cost * journey.distance * journey.car.consumption) / 100} CHF
-      </a>
+    <li>
+      <Modal
+        trigger={
+          <div className="border border-gray-500 w-full p-4 rounded flex justify-between">
+            <div className="text-left">
+              <p>
+                {journey.date} | <i>{journey.name}</i>
+              </p>
+              <p>
+                {journey.members.map(member => member.name).join(', ')} | {journey.car.name}
+              </p>
+            </div>
+            <p className="text-right">
+              <span className="text-red-800">{costFormatter.format(journeyCost)}</span>
+              <br />
+              {journey.distance} km | {journey.fuel_cost} CHF/L
+            </p>
+          </div>
+        }
+      >
+        <JourneyForm
+          action="update"
+          defaultValue={{
+            ...journey,
+            member_ids: journey.members.map(member => member.id.toString()),
+          }}
+        />
+      </Modal>
     </li>
   )
 }

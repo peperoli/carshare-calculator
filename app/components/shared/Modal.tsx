@@ -4,7 +4,7 @@ export function Modal({ trigger, children }: { trigger: ReactNode; children: Rea
   const [isOpen, setIsOpen] = useState(false)
   const ref = useRef<HTMLDialogElement | null>(null)
   const closeModal = () => setIsOpen(false)
-  const triggerProps = { onClick: () => setIsOpen(true) }
+  const triggerProps = { className: 'block w-full', onClick: () => setIsOpen(true) }
 
   useEffect(() => {
     if (isOpen) {
@@ -17,9 +17,11 @@ export function Modal({ trigger, children }: { trigger: ReactNode; children: Rea
   return (
     <>
       <button {...triggerProps}>{trigger}</button>
-      <dialog ref={ref} onCancel={closeModal} className="p-4">
+      <dialog ref={ref} onCancel={closeModal} className="w-full max-w-xl top-auto py-8 px-4 backdrop:bg-black/50">
         {children}
-        <button onClick={closeModal}>Cancel</button>
+        <button onClick={closeModal} className="absolute top-4 right-4">
+          Cancel
+        </button>
       </dialog>
     </>
   )

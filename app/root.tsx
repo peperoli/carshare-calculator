@@ -5,26 +5,48 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "react-router";
+  useRouteLoaderData,
+} from 'react-router'
 
-import type { Route } from "./+types/root";
-import stylesheet from "./app.css?url";
+import type { Route } from './+types/root'
+import stylesheet from './app.css?url'
+import { useEffect } from 'react'
+import toast, { Toaster } from 'react-hot-toast'
+import { getSession } from './sessions.server'
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
   },
   {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
   },
-  { rel: "stylesheet", href: stylesheet },
-];
+  { rel: 'stylesheet', href: stylesheet },
+]
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const session = await getSession(request.headers.get('Cookie'))
+  const errorFlash = session.get('error')
+  const successFlash = session.get('success')
+
+  return { errorFlash, successFlash }
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData<typeof loader>('root')
+
+  useEffect(() => {
+    if (data?.errorFlash) {
+      toast.error(data.errorFlash)
+    }
+    if (data?.successFlash) {
+      toast.success(data.successFlash)
+    }
+  }, [data?.errorFlash, data?.successFlash])
   return (
     <html lang="en">
       <head>
@@ -35,31 +57,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
-  );
+  )
 }
 
 export default function App() {
-  return <Outlet />;
+  return <Outlet />
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
-  let stack: string | undefined;
+  let message = 'Oops!'
+  let details = 'An unexpected error occurred.'
+  let stack: string | undefined
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
+    message = error.status === 404 ? '404' : 'Error'
     details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+      error.status === 404 ? 'The requested page could not be found.' : error.statusText || details
   } else if (import.meta.env.DEV && error && error instanceof Error) {
-    details = error.message;
-    stack = error.stack;
+    details = error.message
+    stack = error.stack
   }
 
   return (
@@ -72,5 +93,5 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         </pre>
       )}
     </main>
-  );
+  )
 }

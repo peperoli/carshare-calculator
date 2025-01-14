@@ -24,11 +24,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Index({ loaderData }: Route.ComponentProps) {
   const { spaces } = loaderData
   return (
-    <main>
-      <h1>Hello</h1>
+    <main className="container">
+      <h1>Carshare Calculator</h1>
+      <p>Choose your space:</p>
       <ul>
         {spaces.map(todo => (
-          <li key={todo.id}>
+          <li key={todo.id} className="p-4 rounded border border-slate-500">
             <Link to="/spaces/1">{todo.name}</Link>
           </li>
         ))}
