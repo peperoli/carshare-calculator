@@ -7,3 +7,6 @@
 
 # Secrets
 .env.local
+
+# Vercel
+/.vercel/
