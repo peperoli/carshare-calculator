@@ -13,7 +13,7 @@ export type Database = {
         Row: {
           consumption: number
           created_at: string
-          fuel: string
+          fuel: Database["public"]["Enums"]["fuel"]
           id: number
           name: string
           space_id: number
@@ -21,7 +21,7 @@ export type Database = {
         Insert: {
           consumption: number
           created_at?: string
-          fuel?: string
+          fuel: Database["public"]["Enums"]["fuel"]
           id?: number
           name: string
           space_id: number
@@ -29,7 +29,7 @@ export type Database = {
         Update: {
           consumption?: number
           created_at?: string
-          fuel?: string
+          fuel?: Database["public"]["Enums"]["fuel"]
           id?: number
           name?: string
           space_id?: number
@@ -154,6 +154,61 @@ export type Database = {
           },
         ]
       }
+      refills: {
+        Row: {
+          car_id: number
+          cost: number
+          created_at: string
+          date: string
+          fuel_cost: number | null
+          id: number
+          member_id: number
+          space_id: number
+        }
+        Insert: {
+          car_id: number
+          cost: number
+          created_at?: string
+          date: string
+          fuel_cost?: number | null
+          id?: number
+          member_id: number
+          space_id: number
+        }
+        Update: {
+          car_id?: number
+          cost?: number
+          created_at?: string
+          date?: string
+          fuel_cost?: number | null
+          id?: number
+          member_id?: number
+          space_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refuels_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refuels_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refuels_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       spaces: {
         Row: {
           created_at: string
@@ -174,13 +229,28 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      journeys_and_refills: {
+        Row: {
+          car: Database["public"]["Tables"]["cars"]["Row"] | null
+          cost: number | null
+          created_at: string | null
+          date: string | null
+          distance: number | null
+          fuel_cost: number | null
+          id: number | null
+          members: Database["public"]["Tables"]["members"]["Row"][] | null
+          name: string | null
+          space_id: number | null
+          type: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      fuel: "petrol" | "diesel"
     }
     CompositeTypes: {
       [_ in never]: never

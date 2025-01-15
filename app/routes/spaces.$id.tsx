@@ -1,12 +1,14 @@
 import { createClient } from '~/utils/supabase.server'
 import type { Route } from './+types/spaces.$id'
 import { redirectDocument, type LoaderFunctionArgs } from 'react-router'
-import { JourneyItem } from '~/components/journeys/JourneyItem'
+import { JourneyItem } from '~/components/journeys-and-refills/JourneyItem'
 import { Modal } from '~/components/shared/Modal'
-import { JourneyForm, journeySchema } from '~/components/journeys/JourneyForm'
+import { JourneyForm, journeySchema } from '~/components/journeys-and-refills/JourneyForm'
 import { parseWithZod } from '@conform-to/zod'
 import { commitSession, getSession } from '~/sessions.server'
 import clsx from 'clsx'
+import { RefillItem } from '~/components/journeys-and-refills/RefillItem'
+import type { Tables } from 'database.types'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const supabase = createClient(request)
@@ -15,18 +17,40 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     throw new Error('Missing space ID')
   }
 
-  const { data: space, error } = await supabase
+  const { data: space, error: spaceError } = await supabase
     .from('spaces')
-    .select('*, members(*), cars(*), journeys(*, members(*), car:cars(*))')
+    .select(
+      `*,
+      members(*),
+      cars(*)`
+    )
     .eq('id', parseInt(params.id))
-    .order('date', { referencedTable: 'journeys', ascending: false })
     .single()
 
-  if (error) {
-    throw error
+  if (spaceError) {
+    throw spaceError
   }
 
-  return { space }
+  type JourneyOrRefill = (
+    | ({ type: 'journey' } & Tables<'journeys'>)
+    | ({ type: 'refill' } & Tables<'refills'>)
+  ) & {
+    members: Tables<'members'>[]
+    car: Tables<'cars'>
+  }
+
+  const { data: journeysAndRefills, error: journeysAndRefillsError } = await supabase
+    .from('journeys_and_refills')
+    .select('*')
+    .eq('space_id', parseInt(params.id))
+    .order('date', { ascending: false })
+    .returns<JourneyOrRefill[]>()
+
+  if (journeysAndRefillsError) {
+    throw journeysAndRefillsError
+  }
+
+  return { space, journeysAndRefills }
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -176,7 +200,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function Page({ loaderData }: Route.ComponentProps) {
-  const { space } = loaderData
+  const { space, journeysAndRefills } = loaderData
   const memberBalances: { member_id: number; name: string; balance: number }[] = []
   const costFormatter = new Intl.NumberFormat('de-CH', {
     style: 'currency',
@@ -185,22 +209,25 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     maximumFractionDigits: 2,
   })
 
-  space.journeys.forEach(journey => {
-    journey.members.forEach(member => {
+  journeysAndRefills.forEach(item => {
+    item.members?.forEach(member => {
       const memberBalance = memberBalances.find(balance => balance.member_id === member.id)
-      let journeyCost = (journey.fuel_cost / 100) * journey.distance * journey.car.consumption
+      let journeyCost =
+        item.type === 'journey'
+          ? -1 * (item.fuel_cost / 100) * item.distance * item.car.consumption
+          : item.cost
 
-      if (journey.members.length > 1) {
-        journeyCost /= journey.members.length
+      if (item.members.length > 1) {
+        journeyCost /= item.members.length
       }
 
       if (memberBalance) {
-        memberBalance.balance -= journeyCost
+        memberBalance.balance += journeyCost
       } else {
         memberBalances.push({
           member_id: member.id,
           name: member.name,
-          balance: -journeyCost,
+          balance: journeyCost,
         })
       }
     })
@@ -231,7 +258,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         ))}
       </ul>
 
-      <h2 className="mt-6">Journeys</h2>
+      <h2 className="mt-6">Journeys and refills</h2>
       <Modal
         trigger={
           <div className="px-4 py-2 rounded-full bg-green-800 font-bold text-white">
@@ -242,10 +269,15 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         <JourneyForm action="create" />
       </Modal>
       <ul className="grid gap-2 mt-6">
-        {space.journeys.map(journey => (
-          <JourneyItem key={journey.id} journey={journey} />
-        ))}
+        {journeysAndRefills.map(item => {
+          if (item.type === 'journey') {
+            return <JourneyItem key={item.id} journey={item} />
+          } else if (item.type === 'refill') {
+            return <RefillItem key={item.id} refill={item} />
+          }
+        })}
       </ul>
+      <pre>{JSON.stringify(journeysAndRefills, null, 2)}</pre>
     </main>
   )
 }
