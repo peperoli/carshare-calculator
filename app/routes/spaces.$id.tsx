@@ -3,7 +3,7 @@ import type { Route } from './+types/spaces.$id'
 import { redirectDocument, type LoaderFunctionArgs } from 'react-router'
 import { JourneyItem } from '~/components/journeys-and-refills/JourneyItem'
 import { Modal } from '~/components/shared/Modal'
-import { JourneyForm, journeySchema } from '~/components/journeys-and-refills/JourneyForm'
+import { Form, journeySchema } from '~/components/journeys-and-refills/Form'
 import { parseWithZod } from '@conform-to/zod'
 import { commitSession, getSession } from '~/sessions.server'
 import clsx from 'clsx'
@@ -266,7 +266,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           </div>
         }
       >
-        <JourneyForm action="create" />
+        <Form action="create" />
       </Modal>
       <ul className="grid gap-2 mt-6">
         {journeysAndRefills.map(item => {

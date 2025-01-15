@@ -1,10 +1,12 @@
 import { getCollectionProps, getSelectProps, useForm } from '@conform-to/react'
 import { parseWithZod } from '@conform-to/zod'
-import { Form, useActionData, useLoaderData } from 'react-router'
+import { Form as ReactRouterForm, useActionData, useLoaderData } from 'react-router'
 import { z } from 'zod'
 import { TextInput } from '../forms/TextInput'
 import type { Tables } from 'database.types'
 import type { loader } from '~/routes/spaces.$id'
+import { useState } from 'react'
+import clsx from 'clsx'
 
 export const journeySchema = z.object({
   journey_id: z.number().optional(),
@@ -17,7 +19,17 @@ export const journeySchema = z.object({
   intent: z.enum(['create', 'update', 'delete']),
 })
 
-export function JourneyForm({
+export const refillSchema = z.object({
+  refill_id: z.number().optional(),
+  date: z.string(),
+  cost: z.number().min(1),
+  fuel_cost: z.number().min(0.01),
+  member_id: z.string(),
+  car_id: z.number(),
+  intent: z.enum(['create', 'update', 'delete']),
+})
+
+export function Form({
   action,
   defaultValue,
 }: {
@@ -38,28 +50,60 @@ export function JourneyForm({
           },
     // Reuse the validation logic on the client
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema: journeySchema })
+      return parseWithZod(formData, {
+        schema: formType === 'journey' ? journeySchema : refillSchema,
+      })
     },
     // Validate the form on blur event triggered
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
   })
+  const [formType, setFormType] = useState<'journey' | 'refill'>('journey')
 
   return (
-    <Form
+    <ReactRouterForm
       method="post"
       id={form.id}
       onSubmit={form.onSubmit}
       action={`/spaces/${space.id}`}
       noValidate
-      className='grid gap-4'
+      className="grid gap-4"
     >
       <h2>{action === 'update' ? 'Update journey' : 'Create journey'}</h2>
+      <div>
+        <button
+          type="button"
+          onClick={() => setFormType('journey')}
+          className={clsx(
+            'p-2 border-b-4',
+            formType === 'journey' ? 'border-green-800' : 'border-transparent'
+          )}
+        >
+          Journey
+        </button>
+        <button
+          type="button"
+          onClick={() => setFormType('refill')}
+          className={clsx(
+            'p-2 border-b-4',
+            formType === 'refill' ? 'border-green-800' : 'border-transparent'
+          )}
+        >
+          Refill
+        </button>
+      </div>
       <input type="hidden" name="journey_id" value={defaultValue?.id} />
       <TextInput type="date" field={fields.date} label="Date" />
-      <TextInput field={fields.name} label="Name (optional)" placeholder="Shopping" />
+      {formType === 'journey' && (
+        <TextInput field={fields.name} label="Name (optional)" placeholder="Shopping" />
+      )}
       <div className="grid grid-cols-2 gap-4">
-        <TextInput type="number" field={fields.distance} label="Distance (km)" placeholder="25" />
+        {formType === 'journey' && (
+          <TextInput type="number" field={fields.distance} label="Distance (km)" placeholder="25" />
+        )}
+        {formType === 'refill' && (
+          <TextInput type="number" field={fields.cost} label="Kosten (CHF)" placeholder="50" />
+        )}
         <TextInput
           type="number"
           field={fields.fuel_cost}
@@ -71,11 +115,11 @@ export function JourneyForm({
         <legend className="font-bold text-sm">Members</legend>
         <div className="flex gap-4">
           {getCollectionProps(fields.member_ids, {
-            type: 'checkbox',
+            type: formType === 'journey' ? 'checkbox' : 'radio',
             options: space.members.map(member => member.id.toString()),
           }).map(({ key, ...props }) => (
             <label key={props.id} htmlFor={props.id}>
-              <input key={key} {...props} className='size-4' />
+              <input key={key} {...props} className="size-4" />
               <span className="ml-2">
                 {space.members.find(member => member.id === parseInt(props.value))?.name}
               </span>
@@ -127,6 +171,6 @@ export function JourneyForm({
           Create
         </button>
       )}
-    </Form>
+    </ReactRouterForm>
   )
 }

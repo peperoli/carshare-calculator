@@ -1,6 +1,6 @@
 import type { Tables } from 'database.types'
 import { Modal } from '../shared/Modal'
-import { JourneyForm } from './JourneyForm'
+import { Form } from './Form'
 
 export function JourneyItem({
   journey,
@@ -36,7 +36,7 @@ export function JourneyItem({
           </div>
         }
       >
-        <JourneyForm
+        <Form
           action="update"
           defaultValue={{
             ...journey,
