@@ -197,15 +197,7 @@ export function Form({
         <p className="text-sm text-red-700">{fields.car_id.errors}</p>
       </fieldset>
       {action === 'update' ? (
-        <div className="flex gap-4 mt-6">
-          <>
-            <button
-              name="intent"
-              value={ressourceType === 'journey' ? 'delete-journey' : 'delete-refill'}
-              className="flex-1 px-4 py-2 rounded-full bg-red-800 font-bold text-white"
-            >
-              Delete
-            </button>
+        <div className="flex flex-row-reverse gap-4 mt-6">
             <button
               name="intent"
               value={ressourceType === 'journey' ? 'update-journey' : 'update-refill'}
@@ -213,7 +205,13 @@ export function Form({
             >
               Update
             </button>
-          </>
+            <button
+              name="intent"
+              value={ressourceType === 'journey' ? 'delete-journey' : 'delete-refill'}
+              className="flex-1 px-4 py-2 rounded-full bg-red-800 font-bold text-white"
+            >
+              Delete
+            </button>
         </div>
       ) : (
         <button
