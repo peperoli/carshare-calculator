@@ -18,7 +18,7 @@ export function TextInput({
         {...getInputProps(field, { type })}
         key={field.key}
         placeholder={placeholder}
-        className="p-2 block w-full bg-gray-200 dark:bg-gray-800"
+        className="p-2 block w-full bg-gray-100 dark:bg-gray-800"
       />
       <p className="text-sm text-red-700">{field.errors}</p>
     </fieldset>

@@ -14,12 +14,16 @@ export function JourneyItem({
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
+  const distanceFormatter = new Intl.NumberFormat('de-CH', {
+    style: 'unit',
+    unit: 'kilometer',
+  })
 
   return (
     <li>
       <Modal
         trigger={
-          <div className="border border-gray-500 w-full p-4 rounded flex justify-between">
+          <div className="border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between">
             <div className="text-left">
               <p>
                 {journey.date} | <i>{journey.name}</i>
@@ -31,13 +35,14 @@ export function JourneyItem({
             <p className="text-right">
               <span className="text-red-800">{costFormatter.format(journeyCost)}</span>
               <br />
-              {journey.distance} km | {journey.fuel_cost} CHF/L
+              {distanceFormatter.format(journey.distance)} | {costFormatter.format(journey.fuel_cost)}/l
             </p>
           </div>
         }
       >
         <Form
           action="update"
+          ressourceType="journey"
           defaultValue={{
             ...journey,
             member_ids: journey.members.map(member => member.id.toString()),

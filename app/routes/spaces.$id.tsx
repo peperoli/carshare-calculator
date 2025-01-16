@@ -3,7 +3,7 @@ import type { Route } from './+types/spaces.$id'
 import { redirectDocument, type LoaderFunctionArgs } from 'react-router'
 import { JourneyItem } from '~/components/journeys-and-refills/JourneyItem'
 import { Modal } from '~/components/shared/Modal'
-import { Form, journeySchema } from '~/components/journeys-and-refills/Form'
+import { Form, journeySchema, refillSchema } from '~/components/journeys-and-refills/Form'
 import { parseWithZod } from '@conform-to/zod'
 import { commitSession, getSession } from '~/sessions.server'
 import clsx from 'clsx'
@@ -25,6 +25,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
       cars(*)`
     )
     .eq('id', parseInt(params.id))
+    .order('name', { referencedTable: 'members' })
     .single()
 
   if (spaceError) {
@@ -57,16 +58,19 @@ export async function action({ request, params }: Route.ActionArgs) {
   const session = await getSession(request.headers.get('Cookie'))
   const formData = await request.formData()
   const supabase = createClient(request)
+  const ressourceType = formData.get('intent')?.toString().split('-')[1]
 
   try {
-    const submission = parseWithZod(formData, { schema: journeySchema })
+    const submission = parseWithZod(formData, {
+      schema: ressourceType === 'journey' ? journeySchema : refillSchema,
+    })
 
     if (submission.status !== 'success') {
       throw new Error('Invalid form submission')
     }
 
     switch (submission.value.intent) {
-      case 'create': {
+      case 'create-journey': {
         const { date, name, distance, fuel_cost, member_ids, car_id } = submission.value
 
         const { data: journey, error: journeyError } = await supabase
@@ -91,13 +95,9 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         session.flash('success', 'Journey created.')
 
-        return redirectDocument(request.url, {
-          headers: {
-            'Set-Cookie': await commitSession(session),
-          },
-        })
+        break
       }
-      case 'update': {
+      case 'update-journey': {
         const { journey_id, date, name, distance, fuel_cost, member_ids, car_id } = submission.value
 
         if (!journey_id) {
@@ -155,13 +155,9 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         session.flash('success', 'Journey updated.')
 
-        return redirectDocument(request.url, {
-          headers: {
-            'Set-Cookie': await commitSession(session),
-          },
-        })
+        break
       }
-      case 'delete': {
+      case 'delete-journey': {
         const { journey_id } = submission.value
 
         if (!journey_id) {
@@ -176,16 +172,79 @@ export async function action({ request, params }: Route.ActionArgs) {
 
         session.flash('success', 'Journey deleted.')
 
-        return redirectDocument(request.url, {
-          headers: {
-            'Set-Cookie': await commitSession(session),
-          },
-        })
+        break
+      }
+      case 'create-refill': {
+        const { date, cost, fuel_cost, member_id, car_id } = submission.value
+
+        const { error: refillError } = await supabase
+          .from('refills')
+          .insert({
+            space_id: parseInt(params.id),
+            date,
+            cost,
+            fuel_cost,
+            member_id: parseInt(member_id),
+            car_id,
+          })
+          .select()
+          .single()
+
+        if (refillError) {
+          throw refillError
+        }
+
+        session.flash('success', 'Refill created.')
+
+        break
+      }
+      case 'update-refill': {
+        const { refill_id, date, cost, fuel_cost, member_id, car_id } = submission.value
+
+        if (!refill_id) {
+          throw new Error('Missing refill ID')
+        }
+
+        const { error: updateRefillError } = await supabase
+          .from('refills')
+          .update({ date, cost, fuel_cost, member_id: parseInt(member_id), car_id })
+          .eq('id', refill_id)
+
+        if (updateRefillError) {
+          throw updateRefillError
+        }
+
+        session.flash('success', 'Refill updated.')
+
+        break
+      }
+      case 'delete-refill': {
+        const { refill_id } = submission.value
+
+        if (!refill_id) {
+          throw new Error('Missing refill ID')
+        }
+
+        const { error } = await supabase.from('refills').delete().eq('id', refill_id)
+
+        if (error) {
+          throw error
+        }
+
+        session.flash('success', 'Refill deleted.')
+
+        break
       }
       default: {
         throw new Error('Unexpected action')
       }
     }
+
+    return redirectDocument(request.url, {
+      headers: {
+        'Set-Cookie': await commitSession(session),
+      },
+    })
   } catch (error) {
     if (error instanceof Error) {
       session.flash('error', error.message)
@@ -258,11 +317,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         ))}
       </ul>
 
-      <h2 className="mt-6">Journeys and refills</h2>
+      <h2 className="mt-6">Journeys and Refills</h2>
       <Modal
         trigger={
           <div className="px-4 py-2 rounded-full bg-green-800 font-bold text-white">
-            Create journey
+            Create journey or refill
           </div>
         }
       >
@@ -277,7 +336,6 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           }
         })}
       </ul>
-      <pre>{JSON.stringify(journeysAndRefills, null, 2)}</pre>
     </main>
   )
 }
