@@ -17,7 +17,7 @@ export function Modal({ trigger, children }: { trigger: ReactNode; children: Rea
   return (
     <>
       <button {...triggerProps}>{trigger}</button>
-      <dialog ref={ref} onCancel={closeModal} className="w-full max-w-xl top-auto py-8 px-4 backdrop:bg-black/50">
+      <dialog ref={ref} onCancel={closeModal} className="w-full max-w-xl top-auto py-8 px-4 bg-white dark:bg-gray-900 backdrop:bg-black/50">
         {children}
         <button onClick={closeModal} className="absolute top-4 right-4">
           Cancel
