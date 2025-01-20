@@ -260,53 +260,54 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { space, journeysAndRefills } = loaderData
-  const memberBalances: { member_id: number; name: string; balance: number }[] = []
   const costFormatter = new Intl.NumberFormat('de-CH', {
     style: 'currency',
     currency: 'CHF',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
+  const memberBalances: { [member_id: number]: number } = {}
 
   journeysAndRefills.forEach(item => {
+    const journeyCost =
+      item.type === 'journey'
+        ? -1 * (item.fuel_cost / 100) * item.distance * item.car.consumption
+        : item.cost
+
+    const splitCost = item.members.length > 1 ? journeyCost / item.members.length : journeyCost
+
     item.members?.forEach(member => {
-      const memberBalance = memberBalances.find(balance => balance.member_id === member.id)
-      let journeyCost =
-        item.type === 'journey'
-          ? -1 * (item.fuel_cost / 100) * item.distance * item.car.consumption
-          : item.cost
-
-      if (item.members.length > 1) {
-        journeyCost /= item.members.length
-      }
-
-      if (memberBalance) {
-        memberBalance.balance += journeyCost
+      if (memberBalances[member.id]) {
+        memberBalances[member.id] += splitCost
       } else {
-        memberBalances.push({
-          member_id: member.id,
-          name: member.name,
-          balance: journeyCost,
-        })
+        memberBalances[member.id] = splitCost
       }
     })
   })
+
+  const averageMemberBalance =
+    Object.entries(memberBalances).reduce((acc, [_, balance]) => acc + balance, 0) /
+    space.members.length
 
   return (
     <main className="container">
       <h1>{space.name}</h1>
       <p>Members:</p>
       <ul>
-        {memberBalances.map(member => (
-          <li key={member.member_id} className="ml-4">
-            {member.name}{' '}
-            <span
-              className={clsx(Math.sign(member.balance) === -1 ? 'text-red-800' : 'text-green-800')}
-            >
-              {costFormatter.format(member.balance)}
-            </span>
-          </li>
-        ))}
+        {space.members.map(member => {
+          const balance = memberBalances[member.id] ?? 0
+          const deviation = balance - averageMemberBalance
+          return (
+            <li key={member.id} className="ml-4">
+              {member.name}{' '}
+              <span
+                className={clsx(Math.sign(deviation) === -1 ? 'text-red-800' : 'text-green-800')}
+              >
+                <strong>{costFormatter.format(deviation)}</strong> ({costFormatter.format(balance)})
+              </span>
+            </li>
+          )
+        })}
       </ul>
       <p>Cars:</p>
       <ul>

@@ -26,11 +26,11 @@ export default function Index({ loaderData }: Route.ComponentProps) {
   return (
     <main className="container">
       <h1>Carshare Calculator</h1>
-      <p>Choose your space:</p>
-      <ul>
-        {spaces.map(todo => (
-          <li key={todo.id} className="p-4 rounded border border-slate-500">
-            <Link to="/spaces/1">{todo.name}</Link>
+      <h3>Choose your space:</h3>
+      <ul className="grid gap-2 mt-6">
+        {spaces.map(space => (
+          <li key={space.id} className="p-4 rounded border border-slate-500">
+            <Link to={`/spaces/${space.id}`}>{space.name}</Link>
           </li>
         ))}
       </ul>
