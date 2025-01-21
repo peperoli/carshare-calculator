@@ -21,5 +21,31 @@ export default defineConfig(({ isSsrBuild, command }) => ({
   ssr: {
     noExternal: command === 'build' ? true : undefined,
   },
-  plugins: [reactRouter(), tsconfigPaths(), VitePWA({ registerType: 'autoUpdate' })],
+  plugins: [
+    reactRouter(),
+    tsconfigPaths(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['/favicon.ico'],
+      manifest: {
+        name: 'Carshare Calculator',
+        short_name: 'Carshare Calc',
+        description: 'A simple calculator for carsharing fuel costs',
+        theme_color: '#d68400',
+        background_color: '#edca91',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+    }),
+  ],
 }))

@@ -4,8 +4,11 @@ import { createClient } from '~/utils/supabase.server'
 
 export function meta() {
   return [
-    { title: 'New React Router App' },
-    { name: 'description', content: 'Welcome to React Router!' },
+    { title: 'Carshare Calculator' },
+    { name: 'description', content: 'A simple calculator for carsharing fuel costs' },
+    { name: 'favicon', content: '/favicon.ico' },
+    { name: 'apple-touch-icon', content: '/apple-touch-icon.png' },
+    { name: 'theme-color', content: '#d68400' },
   ]
 }
 
