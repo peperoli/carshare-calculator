@@ -1,6 +1,6 @@
 import { getCollectionProps, getSelectProps, useForm } from '@conform-to/react'
 import { parseWithZod } from '@conform-to/zod'
-import { Form as ReactRouterForm, useActionData, useLoaderData } from 'react-router'
+import { Form as ReactRouterForm, useActionData, useLoaderData, useNavigation } from 'react-router'
 import { z } from 'zod'
 import { TextInput } from '../forms/TextInput'
 import type { Tables } from 'database.types'
@@ -69,6 +69,7 @@ export function Form({
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onInput',
   })
+  const navigation = useNavigation()
 
   return (
     <ReactRouterForm
@@ -198,28 +199,31 @@ export function Form({
       </fieldset>
       {action === 'update' ? (
         <div className="flex flex-row-reverse gap-4 mt-6">
-            <button
-              name="intent"
-              value={ressourceType === 'journey' ? 'update-journey' : 'update-refill'}
-              className="flex-1 px-4 py-2 rounded-full bg-green-800 font-bold text-white"
-            >
-              Update
-            </button>
-            <button
-              name="intent"
-              value={ressourceType === 'journey' ? 'delete-journey' : 'delete-refill'}
-              className="flex-1 px-4 py-2 rounded-full bg-red-800 font-bold text-white"
-            >
-              Delete
-            </button>
+          <button
+            name="intent"
+            value={ressourceType === 'journey' ? 'update-journey' : 'update-refill'}
+            disabled={navigation.state === 'submitting'}
+            className="flex-1 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
+          >
+            {navigation.state === 'submitting' ? 'Loading ...' : 'Update'}
+          </button>
+          <button
+            name="intent"
+            value={ressourceType === 'journey' ? 'delete-journey' : 'delete-refill'}
+            disabled={navigation.state === 'submitting'}
+            className="flex-1 px-4 py-2 rounded-full bg-red-800 font-bold text-white disabled:opacity-30"
+          >
+            {navigation.state === 'submitting' ? 'Loading ...' : 'Delete'}
+          </button>
         </div>
       ) : (
         <button
           name="intent"
           value={ressourceType === 'journey' ? 'create-journey' : 'create-refill'}
-          className="w-full mt-6 px-4 py-2 rounded-full bg-green-800 font-bold text-white"
+          disabled={navigation.state === 'submitting'}
+          className="w-full mt-6 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
         >
-          Create
+          {navigation.state === 'submitting' ? 'Loading ...' : 'Create'}
         </button>
       )}
     </ReactRouterForm>
