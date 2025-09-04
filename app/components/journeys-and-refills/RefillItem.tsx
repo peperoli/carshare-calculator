@@ -37,7 +37,7 @@ export function RefillItem({
               </p>
             </div>
             <p className="text-right">
-              <span className="text-green-800">{costFormatter.format(refill.cost)}</span>
+              <span className="text-green-800 dark:text-green-400">{costFormatter.format(refill.cost)}</span>
               <br />
               {refillAmount ? amountFormatter.format(refillAmount) : null} |{' '}
               {refill.fuel_cost ? costFormatter.format(refill.fuel_cost) : null}/l

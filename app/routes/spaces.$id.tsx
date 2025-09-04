@@ -9,6 +9,7 @@ import { commitSession, getSession } from '~/sessions.server'
 import clsx from 'clsx'
 import { RefillItem } from '~/components/journeys-and-refills/RefillItem'
 import type { Tables } from 'database.types'
+import * as Tabs from '@radix-ui/react-tabs'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const supabase = createClient(request)
@@ -267,6 +268,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     maximumFractionDigits: 2,
   })
   const memberBalances: { [member_id: number]: number } = {}
+  const guestBalances: { [member_id: number]: number } = {}
 
   journeysAndRefills.forEach(item => {
     const journeyCost =
@@ -277,66 +279,127 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     const splitCost = item.members.length > 1 ? journeyCost / item.members.length : journeyCost
 
     item.members?.forEach(member => {
-      if (memberBalances[member.id]) {
-        memberBalances[member.id] += splitCost
+      if (member.is_guest) {
+        if (guestBalances[member.id]) {
+          guestBalances[member.id] += splitCost
+        } else {
+          guestBalances[member.id] = splitCost
+        }
       } else {
-        memberBalances[member.id] = splitCost
+        if (memberBalances[member.id]) {
+          memberBalances[member.id] += splitCost
+        } else {
+          memberBalances[member.id] = splitCost
+        }
       }
     })
   })
 
   const averageMemberBalance =
     Object.entries(memberBalances).reduce((acc, [_, balance]) => acc + balance, 0) /
-    space.members.length
+    space.members.filter(member => !member.is_guest).length
 
   return (
     <main className="container">
       <h1>{space.name}</h1>
-      <p>Members:</p>
-      <ul>
-        {space.members.map(member => {
-          const balance = memberBalances[member.id] ?? 0
-          const deviation = balance - averageMemberBalance
-          return (
-            <li key={member.id} className="ml-4">
-              {member.name}{' '}
-              <span
-                className={clsx(Math.sign(deviation) === -1 ? 'text-red-800' : 'text-green-800')}
-              >
-                <strong>{costFormatter.format(deviation)}</strong> ({costFormatter.format(balance)})
-              </span>
-            </li>
-          )
-        })}
-      </ul>
-      <p>Cars:</p>
-      <ul>
-        {space.cars.map(car => (
-          <li key={car.id} className="ml-4">
-            {car.name} ({car.fuel}, {car.consumption}L/100km)
-          </li>
-        ))}
-      </ul>
+      <Tabs.Root defaultValue="journeysAndRefills" className="mt-6">
+        <Tabs.List className="flex mb-6">
+          <Tabs.Trigger
+            value="journeysAndRefills"
+            className="p-2 text-center border-b-4 border-transparent data-[state=active]:border-green-800 data-[state=active]:text-green-800 data-[state=active]:dark:border-green-400 data-[state=active]:dark:text-green-400"
+          >
+            Journeys and Refills
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="balance"
+            className="p-2 text-center border-b-4 border-transparent data-[state=active]:border-green-800 data-[state=active]:text-green-800 data-[state=active]:dark:border-green-400 data-[state=active]:dark:text-green-400"
+          >
+            Balance
+          </Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Content value="journeysAndRefills">
+          <Modal
+            trigger={
+              <div className="px-4 py-2 rounded-full bg-green-800 font-bold text-white">
+                Create journey or refill
+              </div>
+            }
+          >
+            <Form action="create" />
+          </Modal>
+          <ul className="grid gap-2 mt-6">
+            {journeysAndRefills.map(item => {
+              if (item.type === 'journey') {
+                return <JourneyItem key={item.id} journey={item} />
+              } else if (item.type === 'refill') {
+                return <RefillItem key={item.id} refill={item} />
+              }
+            })}
+          </ul>
+        </Tabs.Content>
+        <Tabs.Content value="balance">
+          <table className="w-full mb-6">
+            <thead>
+              <tr>
+                <th className="pb-2 text-left">Member</th>
+                <th className="pb-2 text-right">Balance</th>
+                <th className="pb-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {space.members.map(member => {
+                const balance = member.is_guest
+                  ? guestBalances[member.id] ?? 0
+                  : memberBalances[member.id] ?? 0
+                const deviation = balance - averageMemberBalance
 
-      <h2 className="mt-6">Journeys and Refills</h2>
-      <Modal
-        trigger={
-          <div className="px-4 py-2 rounded-full bg-green-800 font-bold text-white">
-            Create journey or refill
-          </div>
-        }
-      >
-        <Form action="create" />
-      </Modal>
-      <ul className="grid gap-2 mt-6">
-        {journeysAndRefills.map(item => {
-          if (item.type === 'journey') {
-            return <JourneyItem key={item.id} journey={item} />
-          } else if (item.type === 'refill') {
-            return <RefillItem key={item.id} refill={item} />
-          }
-        })}
-      </ul>
+                return (
+                  <tr key={member.id} className="ml-4">
+                    <Cell>
+                      {member.name} {member.is_guest && <span>(Guest)</span>}
+                    </Cell>
+                    <Cell
+                      className={clsx(
+                        'text-right',
+                        Math.sign(deviation) === -1 ? 'text-red-800 dark:text-red-400' : 'text-green-800 dark:text-green-400'
+                      )}
+                    >
+                      {!member.is_guest && <strong>{costFormatter.format(deviation)}</strong>}
+                    </Cell>
+                    <Cell className="text-right">{costFormatter.format(balance)}</Cell>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="pb-2 text-left">Car</th>
+                <th className="pb-2 text-left">Fuel</th>
+                <th className="pb-2 text-right">Consumption</th>
+              </tr>
+            </thead>
+            <tbody>
+              {space.cars.map(car => (
+                <tr key={car.id} className="ml-4">
+                  <Cell>{car.name}</Cell>
+                  <Cell>{car.fuel}</Cell>
+                  <Cell className="text-right">{car.consumption} l/100km</Cell>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Tabs.Content>
+      </Tabs.Root>
     </main>
+  )
+}
+
+function Cell({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <td className={clsx('border-t border-gray-200 dark:border-gray-800 py-2', className)}>
+      {children}
+    </td>
   )
 }

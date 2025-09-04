@@ -33,7 +33,7 @@ export function JourneyItem({
               </p>
             </div>
             <p className="text-right">
-              <span className="text-red-800">{costFormatter.format(journeyCost)}</span>
+              <span className="text-red-800 dark:text-red-400">{costFormatter.format(journeyCost)}</span>
               <br />
               {distanceFormatter.format(journey.distance)} | {costFormatter.format(journey.fuel_cost)}/l
             </p>
