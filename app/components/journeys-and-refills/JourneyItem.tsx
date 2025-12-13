@@ -23,7 +23,7 @@ export function JourneyItem({
     <li>
       <Modal
         trigger={
-          <div className="border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between">
             <div className="text-left">
               <p>
                 {journey.date} | <i>{journey.name}</i>
@@ -33,14 +33,18 @@ export function JourneyItem({
               </p>
             </div>
             <p className="text-right">
-              <span className="text-red-800 dark:text-red-400">{costFormatter.format(journeyCost)}</span>
+              <span className="text-red-800 dark:text-red-400">
+                {costFormatter.format(journeyCost)}
+              </span>
               <br />
-              {distanceFormatter.format(journey.distance)} | {costFormatter.format(journey.fuel_cost)}/l
+              {distanceFormatter.format(journey.distance)} |{' '}
+              {costFormatter.format(journey.fuel_cost)}/l
             </p>
           </div>
         }
       >
         <Form
+          spaceId={journey.space_id}
           action="update"
           ressourceType="journey"
           defaultValue={{

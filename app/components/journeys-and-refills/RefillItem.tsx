@@ -27,7 +27,7 @@ export function RefillItem({
     <li>
       <Modal
         trigger={
-          <div className="border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between">
             <div className="text-left">
               <p>
                 {refill.date} | <strong>Refill</strong>
@@ -37,7 +37,9 @@ export function RefillItem({
               </p>
             </div>
             <p className="text-right">
-              <span className="text-green-800 dark:text-green-400">{costFormatter.format(refill.cost)}</span>
+              <span className="text-green-800 dark:text-green-400">
+                {costFormatter.format(refill.cost)}
+              </span>
               <br />
               {refillAmount ? amountFormatter.format(refillAmount) : null} |{' '}
               {refill.fuel_cost ? costFormatter.format(refill.fuel_cost) : null}/l
@@ -46,6 +48,7 @@ export function RefillItem({
         }
       >
         <Form
+          spaceId={refill.space_id}
           action="update"
           ressourceType="refill"
           defaultValue={{ ...refill, member_id: refill.members[0].id.toString() }}
