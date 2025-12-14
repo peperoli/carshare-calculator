@@ -1,25 +1,15 @@
 import { commitSession, getSession } from '~/sessions.server'
-import type { Route } from './+types/refills.$id.update'
+import type { Route } from './+types/$refillId.delete'
 import { createClient } from '~/utils/supabase.server'
-import { parseWithZod } from '@conform-to/zod'
-import { refillSchema } from 'lib/schema/refill'
 import { redirect } from 'react-router'
 
 export async function action({ request, params }: Route.ActionArgs) {
   const session = await getSession(request.headers.get('Cookie'))
-  const formData = await request.formData()
   const supabase = createClient(request)
-  const refillId = parseInt(params.id)
+  const spaceId = parseInt(params.spaceId)
+  const refillId = parseInt(params.refillId)
 
   try {
-    const submission = parseWithZod(formData, { schema: refillSchema })
-
-    if (submission.status !== 'success') {
-      throw new Error('Invalid form submission')
-    }
-
-    const { space_id } = submission.value
-
     const { error } = await supabase.from('refills').delete().eq('id', refillId)
 
     if (error) {
@@ -28,7 +18,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
     session.flash('success', 'Refill deleted.')
 
-    return redirect(`/spaces/${space_id}`, {
+    return redirect(`/spaces/${spaceId}`, {
       headers: {
         'Set-Cookie': await commitSession(session),
       },

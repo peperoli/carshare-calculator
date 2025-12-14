@@ -1,9 +1,19 @@
 import { commitSession, getSession } from '~/sessions.server'
-import type { Route } from './+types/journeys.create'
+import type { Route } from './+types/create'
 import { createClient } from '~/utils/supabase.server'
 import { parseWithZod } from '@conform-to/zod'
 import { journeySchema } from 'lib/schema/journey'
 import { redirect } from 'react-router'
+import { JourneyForm } from '~/components/journeys-and-refills/JourneyForm'
+import { fetchSpace } from 'lib/fetchSpace'
+
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const supabase = createClient(request)
+  const spaceId = parseInt(params.spaceId)
+  const space = await fetchSpace(supabase, spaceId)
+
+  return { space }
+}
 
 export async function action({ request }: Route.ActionArgs) {
   const session = await getSession(request.headers.get('Cookie'))
@@ -57,4 +67,10 @@ export async function action({ request }: Route.ActionArgs) {
       },
     })
   }
+}
+
+export default function CreateJourney({ loaderData }: Route.ComponentProps) {
+  const { space } = loaderData
+
+  return <JourneyForm space={space} action="create" />
 }

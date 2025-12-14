@@ -1,5 +1,5 @@
 import { Link, type LoaderFunctionArgs } from 'react-router'
-import type { Route } from './+types/_index'
+import type { Route } from './+types/index'
 import { createClient } from '~/utils/supabase.server'
 
 export function meta() {
@@ -32,7 +32,7 @@ export default function Index({ loaderData }: Route.ComponentProps) {
       <h3>Choose your space:</h3>
       <ul className="grid gap-2 mt-6">
         {spaces.map(space => (
-          <li key={space.id} className="p-4 rounded border border-slate-500">
+          <li key={space.id} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 w-full p-4 rounded">
             <Link to={`/spaces/${space.id}`}>{space.name}</Link>
           </li>
         ))}

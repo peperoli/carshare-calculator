@@ -1,6 +1,5 @@
 import type { Tables } from 'database.types'
-import { Modal } from '../shared/Modal'
-import { Form } from './Form'
+import { Link } from 'react-router'
 
 export function RefillItem({
   refill,
@@ -25,35 +24,27 @@ export function RefillItem({
 
   return (
     <li>
-      <Modal
-        trigger={
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between">
-            <div className="text-left">
-              <p>
-                {refill.date} | <strong>Refill</strong>
-              </p>
-              <p>
-                {refill.members.map(member => member.name).join(', ')} | {refill.car.name}
-              </p>
-            </div>
-            <p className="text-right">
-              <span className="text-green-800 dark:text-green-400">
-                {costFormatter.format(refill.cost)}
-              </span>
-              <br />
-              {refillAmount ? amountFormatter.format(refillAmount) : null} |{' '}
-              {refill.fuel_cost ? costFormatter.format(refill.fuel_cost) : null}/l
-            </p>
-          </div>
-        }
+      <Link
+        to={`/spaces/${refill.space_id}/refills/${refill.id}/update`}
+        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between"
       >
-        <Form
-          spaceId={refill.space_id}
-          action="update"
-          ressourceType="refill"
-          defaultValue={{ ...refill, member_id: refill.members[0].id.toString() }}
-        />
-      </Modal>
+        <div className="text-left">
+          <p>
+            {refill.date} | <strong>Refill</strong>
+          </p>
+          <p>
+            {refill.members.map(member => member.name).join(', ')} | {refill.car.name}
+          </p>
+        </div>
+        <p className="text-right">
+          <span className="text-green-800 dark:text-green-400">
+            {costFormatter.format(refill.cost)}
+          </span>
+          <br />
+          {refillAmount ? amountFormatter.format(refillAmount) : null} |{' '}
+          {refill.fuel_cost ? costFormatter.format(refill.fuel_cost) : null}/l
+        </p>
+      </Link>
     </li>
   )
 }

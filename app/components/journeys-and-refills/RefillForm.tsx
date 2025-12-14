@@ -1,24 +1,26 @@
 import { getCollectionProps, getFormProps, useForm } from '@conform-to/react'
 import { parseWithZod } from '@conform-to/zod'
-import { Form, useActionData, useLoaderData, useNavigation } from 'react-router'
-import { TextInput } from '../forms/TextInput'
+import { Form, Link, useActionData, useNavigation } from 'react-router'
+import { TextField } from '../forms/TextField'
 import type { Tables } from 'database.types'
-import type { loader } from '~/routes/spaces.$id'
 import { refillSchema } from 'lib/schema/refill'
 import { SelectField } from '../forms/SelectField'
+import { TabNav } from './TabNav'
+import * as Dialog from '@radix-ui/react-dialog'
 
 export function RefillForm({
-  spaceId,
+  space,
   action,
   defaultValue,
-}: { spaceId: number } & (
+}: {
+  space: Tables<'spaces'> & { members: Tables<'members'>[]; cars: Tables<'cars'>[] }
+} & (
   | { action: 'create'; defaultValue?: undefined }
   | {
       action: 'update'
       defaultValue: Omit<Tables<'refills'>, 'member_id'> & { member_id: string }
     }
 )) {
-  const { space } = useLoaderData<typeof loader>()
   const lastResult = useActionData()
   const [form, fields] = useForm({
     lastResult,
@@ -41,18 +43,19 @@ export function RefillForm({
 
   return (
     <>
-      <Form
-        method="post"
-        action={action === 'update' ? `/refills/${defaultValue.id}/update` : '/refills/create'}
-        {...getFormProps(form)}
-        className="grid gap-4"
-      >
-        <h2 className="capitalize">{action} refill</h2>
-        <input hidden name="space_id" value={spaceId} />
-        <TextInput type="date" field={fields.date} label="Date" />
+      <div className="flex items-start">
+        {action === 'create' && <TabNav spaceId={space.id} />}
+        <Link to={`/spaces/${space.id}`} className="ml-auto p-2">
+          Close
+        </Link>
+      </div>
+      <Dialog.Title className="capitalize">{action} refill</Dialog.Title>
+      <Form method="post" {...getFormProps(form)} className="grid gap-4">
+        <input hidden name="space_id" value={space.id} />
+        <TextField type="date" field={fields.date} label="Date" />
         <div className="grid grid-cols-2 gap-4">
-          <TextInput type="number" field={fields.cost} label="Cost (CHF)" placeholder="50" />
-          <TextInput
+          <TextField type="number" field={fields.cost} label="Cost (CHF)" placeholder="50" />
+          <TextField
             type="number"
             field={fields.fuel_cost}
             label="Fuel cost (CHF)"
@@ -80,33 +83,37 @@ export function RefillForm({
           field={fields.car_id}
           options={space.cars.map(car => ({ value: car.id.toString(), label: car.name }))}
         />
-      </Form>
-      {action === 'update' ? (
-        <div className="flex flex-row-reverse gap-4 mt-6">
-          <button
-            form={form.id}
-            disabled={navigation.state === 'submitting'}
-            className="flex-1 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
-          >
-            {navigation.state === 'submitting' ? 'Loading ...' : 'Update'}
-          </button>
-          <Form action={`/refills/${defaultValue.id}/delete`} method="post">
+        {action === 'update' ? (
+          <div className="flex flex-row-reverse gap-4 mt-6">
             <button
+              disabled={navigation.state === 'submitting'}
+              className="flex-1 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
+            >
+              {navigation.state === 'submitting' ? 'Loading ...' : 'Update'}
+            </button>
+            <button
+              form="delete-refill"
               disabled={navigation.state === 'submitting'}
               className="flex-1 px-4 py-2 rounded-full bg-red-800 font-bold text-white disabled:opacity-30"
             >
               {navigation.state === 'submitting' ? 'Loading ...' : 'Delete'}
             </button>
-          </Form>
-        </div>
-      ) : (
-        <button
-          form={form.id}
-          disabled={navigation.state === 'submitting'}
-          className="w-full mt-6 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
-        >
-          {navigation.state === 'submitting' ? 'Loading ...' : 'Create'}
-        </button>
+          </div>
+        ) : (
+          <button
+            disabled={navigation.state === 'submitting'}
+            className="w-full mt-6 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
+          >
+            {navigation.state === 'submitting' ? 'Loading ...' : 'Create'}
+          </button>
+        )}
+      </Form>
+      {action === 'update' && (
+        <Form
+          id="delete-refill"
+          action={`/spaces/${space.id}/refills/${defaultValue.id}/delete`}
+          method="post"
+        />
       )}
     </>
   )

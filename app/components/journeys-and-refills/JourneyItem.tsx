@@ -1,6 +1,5 @@
 import type { Tables } from 'database.types'
-import { Modal } from '../shared/Modal'
-import { Form } from './Form'
+import { Link } from 'react-router'
 
 export function JourneyItem({
   journey,
@@ -21,38 +20,26 @@ export function JourneyItem({
 
   return (
     <li>
-      <Modal
-        trigger={
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between">
-            <div className="text-left">
-              <p>
-                {journey.date} | <i>{journey.name}</i>
-              </p>
-              <p>
-                {journey.members.map(member => member.name).join(', ')} | {journey.car.name}
-              </p>
-            </div>
-            <p className="text-right">
-              <span className="text-red-800 dark:text-red-400">
-                {costFormatter.format(journeyCost)}
-              </span>
-              <br />
-              {distanceFormatter.format(journey.distance)} |{' '}
-              {costFormatter.format(journey.fuel_cost)}/l
-            </p>
-          </div>
-        }
+      <Link
+        to={`/spaces/${journey.space_id}/journeys/${journey.id}/update`}
+        className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 w-full p-4 rounded flex justify-between"
       >
-        <Form
-          spaceId={journey.space_id}
-          action="update"
-          ressourceType="journey"
-          defaultValue={{
-            ...journey,
-            member_ids: journey.members.map(member => member.id.toString()),
-          }}
-        />
-      </Modal>
+        <div className="text-left">
+          <p>
+            {journey.date} | <i>{journey.name}</i>
+          </p>
+          <p>
+            {journey.members.map(member => member.name).join(', ')} | {journey.car.name}
+          </p>
+        </div>
+        <p className="text-right">
+          <span className="text-red-800 dark:text-red-400">
+            {costFormatter.format(journeyCost)}
+          </span>
+          <br />
+          {distanceFormatter.format(journey.distance)} | {costFormatter.format(journey.fuel_cost)}/l
+        </p>
+      </Link>
     </li>
   )
 }

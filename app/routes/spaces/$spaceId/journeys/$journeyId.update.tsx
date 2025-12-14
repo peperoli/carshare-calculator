@@ -1,15 +1,36 @@
 import { commitSession, getSession } from '~/sessions.server'
-import type { Route } from './+types/journeys.$id.update'
+import type { Route } from './+types/$journeyId.update'
 import { createClient } from '~/utils/supabase.server'
 import { parseWithZod } from '@conform-to/zod'
 import { journeySchema } from 'lib/schema/journey'
 import { redirect } from 'react-router'
+import { fetchSpace } from 'lib/fetchSpace'
+import { JourneyForm } from '~/components/journeys-and-refills/JourneyForm'
+
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const supabase = createClient(request)
+  const spaceId = parseInt(params.spaceId)
+  const space = await fetchSpace(supabase, spaceId)
+  const journeyId = parseInt(params.journeyId)
+
+  const { data: journey, error: journeyError } = await supabase
+    .from('journeys')
+    .select('*, j_journey_members(member_id)')
+    .eq('id', journeyId)
+    .single()
+
+  if (journeyError) {
+    throw journeyError
+  }
+
+  return { space, journey }
+}
 
 export async function action({ request, params }: Route.ActionArgs) {
   const session = await getSession(request.headers.get('Cookie'))
   const formData = await request.formData()
   const supabase = createClient(request)
-  const journeyId = parseInt(params.id)
+  const journeyId = parseInt(params.journeyId)
 
   try {
     const submission = parseWithZod(formData, { schema: journeySchema })
@@ -85,4 +106,19 @@ export async function action({ request, params }: Route.ActionArgs) {
       },
     })
   }
+}
+
+export default function UpdateJourney({ loaderData }: Route.ComponentProps) {
+  const { space, journey } = loaderData
+
+  return (
+    <JourneyForm
+      space={space}
+      action="update"
+      defaultValue={{
+        ...journey,
+        member_ids: journey.j_journey_members.map(member => member.member_id.toString()),
+      }}
+    />
+  )
 }

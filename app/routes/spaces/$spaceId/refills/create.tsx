@@ -1,9 +1,19 @@
 import { commitSession, getSession } from '~/sessions.server'
-import type { Route } from './+types/refills.create'
+import type { Route } from './+types/create'
 import { createClient } from '~/utils/supabase.server'
 import { parseWithZod } from '@conform-to/zod'
 import { refillSchema } from 'lib/schema/refill'
 import { redirect } from 'react-router'
+import { RefillForm } from '~/components/journeys-and-refills/RefillForm'
+import { fetchSpace } from 'lib/fetchSpace'
+
+export async function loader({ request, params }: Route.LoaderArgs) {
+  const supabase = createClient(request)
+  const spaceId = parseInt(params.spaceId)
+  const space = await fetchSpace(supabase, spaceId)
+
+  return { space }
+}
 
 export async function action({ request }: Route.ActionArgs) {
   const session = await getSession(request.headers.get('Cookie'))
@@ -51,4 +61,10 @@ export async function action({ request }: Route.ActionArgs) {
       },
     })
   }
+}
+
+export default function CreateRefill({ loaderData }: Route.ComponentProps) {
+  const { space } = loaderData
+
+  return <RefillForm space={space} action="create" />
 }
