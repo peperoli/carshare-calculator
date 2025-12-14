@@ -1,6 +1,6 @@
 import { getInputProps, type FieldMetadata } from '@conform-to/react'
 
-export function TextInput({
+export function TextField({
   type = 'text',
   field,
   label,
