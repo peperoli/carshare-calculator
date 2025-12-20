@@ -61,6 +61,17 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   const memberBalances: { [member_id: number]: number } = {}
   const guestBalances: { [member_id: number]: number } = {}
   const outlet = useOutlet()
+  const groupedJourneysAndRefills = groupByDate(journeysAndRefills)
+
+  function groupByDate<T extends { date: string }>(items: T[]): { [date: string]: T[] } {
+    return items.reduce((grouped, item) => {
+      if (!grouped[item.date]) {
+        grouped[item.date] = []
+      }
+      grouped[item.date].push(item)
+      return grouped
+    }, {} as { [date: string]: T[] })
+  }
 
   journeysAndRefills.forEach(item => {
     const journeyCost =
@@ -94,37 +105,49 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <main className="container">
-        <h1>{space.name}</h1>
+        <h1 className="text-center">{space.name}</h1>
         <Tabs.Root defaultValue="journeysAndRefills" className="mt-6">
-          <Tabs.List className="flex mb-6">
+          <Tabs.List className="flex justify-center mb-6">
             <Tabs.Trigger
               value="journeysAndRefills"
-              className="p-2 text-center border-b-4 border-transparent data-[state=active]:border-green-800 data-[state=active]:text-green-800 data-[state=active]:dark:border-green-400 data-[state=active]:dark:text-green-400"
+              className={clsx(
+                'p-2 text-center border-b-4 border-transparent font-bold text-gray-700 dark:text-gray-300',
+                'data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:dark:border-gray-100  data-[state=active]:dark:text-gray-100 '
+              )}
             >
               Journeys and Refills
             </Tabs.Trigger>
             <Tabs.Trigger
               value="balance"
-              className="p-2 text-center border-b-4 border-transparent data-[state=active]:border-green-800 data-[state=active]:text-green-800 data-[state=active]:dark:border-green-400 data-[state=active]:dark:text-green-400"
+              className={clsx(
+                'p-2 text-center border-b-4 border-transparent font-bold text-gray-700 dark:text-gray-300',
+                'data-[state=active]:border-gray-900 data-[state=active]:text-gray-900 data-[state=active]:dark:border-gray-100  data-[state=active]:dark:text-gray-100 '
+              )}
             >
               Balance
             </Tabs.Trigger>
           </Tabs.List>
           <Tabs.Content value="journeysAndRefills">
-            <Link
-              to={`/spaces/${space.id}/journeys/create`}
-              className="block px-4 py-2 rounded-full bg-green-800 text-center font-bold text-white"
-            >
+            <Link to={`/spaces/${space.id}/journeys/create`} className="btn btn-primary">
               Create journey or refill
             </Link>
-            <ul className="grid gap-2 mt-6">
-              {journeysAndRefills.map(item => {
-                if (item.type === 'journey') {
-                  return <JourneyItem key={item.id} journey={item} />
-                } else if (item.type === 'refill') {
-                  return <RefillItem key={item.id} refill={item} />
-                }
-              })}
+            <ul className="grid gap-4 mt-6">
+              {Object.entries(groupedJourneysAndRefills).map(([date, items]) => (
+                <li key={date}>
+                  <h2 className="sticky top-0 bg-gray-100 dark:bg-gray-900 py-2 text-sm mb-0 uppercase text-gray-700 dark:text-gray-300 tracking-wide">
+                    {new Date(date).toLocaleDateString('de-CH', { dateStyle: 'full' })}
+                  </h2>
+                  <ul className="grid gap-2">
+                    {items.map(item => {
+                      if (item.type === 'journey') {
+                        return <JourneyItem key={item.id} journey={item} />
+                      } else if (item.type === 'refill') {
+                        return <RefillItem key={item.id} refill={item} />
+                      }
+                    })}
+                  </ul>
+                </li>
+              ))}
             </ul>
           </Tabs.Content>
           <Tabs.Content value="balance">
@@ -152,8 +175,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                         className={clsx(
                           'text-right',
                           Math.sign(deviation) === -1
-                            ? 'text-red-800 dark:text-red-400'
-                            : 'text-green-800 dark:text-green-400'
+                            ? 'text-red-700 dark:text-red-300'
+                            : 'text-green-700 dark:text-green-300'
                         )}
                       >
                         {!member.is_guest && <strong>{costFormatter.format(deviation)}</strong>}

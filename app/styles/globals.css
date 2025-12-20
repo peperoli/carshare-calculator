@@ -1,27 +1,35 @@
+@import './buttons.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html,
 body {
-  @apply bg-gray-100 dark:bg-gray-950;
-
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
 }
 
 @layer base {
-  h1 {
-    @apply mb-8 text-4xl font-bold;
+  h1,
+  .h1 {
+    @apply mb-8 text-3xl font-bold;
   }
 
-  h2 {
+  h2,
+  .h2 {
     @apply mb-4 text-2xl font-bold;
   }
 
-  h3 {
-    @apply mb-2 text-lg font-bold;
+  h3,
+  .h3 {
+    @apply mb-2 text-xl font-bold;
+  }
+
+  h4,
+  .h4 {
+    @apply mb-1 text-lg font-bold;
   }
 }
 

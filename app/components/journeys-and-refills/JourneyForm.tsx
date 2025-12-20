@@ -7,6 +7,7 @@ import { journeySchema } from 'lib/schema/journey'
 import { SelectField } from '../forms/SelectField'
 import * as Dialog from '@radix-ui/react-dialog'
 import { TabNav } from './TabNav'
+import { LoaderCircle, LoaderCircleIcon, TrashIcon, XIcon } from 'lucide-react'
 
 export function JourneyForm({
   space,
@@ -43,8 +44,8 @@ export function JourneyForm({
     <>
       <div className="flex items-start">
         {action === 'create' && <TabNav spaceId={space.id} />}
-        <Link to={`/spaces/${space.id}`} className="ml-auto p-2">
-          Close
+        <Link to={`/spaces/${space.id}`} className="btn-icon absolute right-4 top-8">
+          <XIcon className="size-5" />
         </Link>
       </div>
       <Dialog.Title className="capitalize">{action} journey</Dialog.Title>
@@ -84,26 +85,30 @@ export function JourneyForm({
         />
         {action === 'update' ? (
           <div className="flex flex-row-reverse gap-4 mt-6">
-            <button
-              disabled={navigation.state === 'submitting'}
-              className="flex-1 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
-            >
-              {navigation.state === 'submitting' ? 'Loading ...' : 'Update'}
+            <button disabled={navigation.state === 'submitting'} className="flex-1 btn btn-primary">
+              {navigation.state === 'submitting' && (
+                <LoaderCircleIcon className="size-5 animate-spin" />
+              )}
+              Update
             </button>
             <button
               form="delete-journey"
               disabled={navigation.state === 'submitting'}
-              className="flex-1 px-4 py-2 rounded-full bg-red-800 font-bold text-white disabled:opacity-30"
+              className="btn-icon btn-secondary btn-danger"
             >
-              {navigation.state === 'submitting' ? 'Loading ...' : 'Delete'}
+              {navigation.state === 'submitting' ? (
+                <LoaderCircleIcon className="size-5 animate-spin" />
+              ) : (
+                <TrashIcon className="size-5" />
+              )}
             </button>
           </div>
         ) : (
-          <button
-            disabled={navigation.state === 'submitting'}
-            className="w-full mt-6 px-4 py-2 rounded-full bg-green-800 font-bold text-white disabled:opacity-30"
-          >
-            {navigation.state === 'submitting' ? 'Loading ...' : 'Create'}
+          <button disabled={navigation.state === 'submitting'} className="btn btn-primary mt-6">
+            {navigation.state === 'submitting' && (
+              <LoaderCircleIcon className="size-5 animate-spin" />
+            )}
+            Create
           </button>
         )}
       </Form>

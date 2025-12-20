@@ -8,10 +8,10 @@ export function TabNav({ spaceId }: { spaceId: number }) {
         to={`/spaces/${spaceId}/journeys/create`}
         className={({ isActive }) =>
           clsx(
-            'p-2 border-b-4',
+            'p-2 border-b-4 font-bold',
             isActive
-              ? 'border-green-800 text-green-800 dark:border-green-400 dark:text-green-400'
-              : 'border-transparent'
+              ? 'border-gray-900 text-gray-900 dark:border-gray-100 dark:text-gray-100'
+              : 'border-transparent text-gray-700 dark:text-gray-300'
           )
         }
       >
@@ -21,10 +21,10 @@ export function TabNav({ spaceId }: { spaceId: number }) {
         to={`/spaces/${spaceId}/refills/create`}
         className={({ isActive }) =>
           clsx(
-            'p-2 border-b-4',
+            'p-2 border-b-4 font-bold',
             isActive
-              ? 'border-green-800 text-green-800 dark:border-green-400 dark:text-green-400'
-              : 'border-transparent'
+              ? 'border-gray-900 text-gray-900 dark:border-gray-100 dark:text-gray-100'
+              : 'border-transparent text-gray-700 dark:text-gray-300'
           )
         }
       >

@@ -9,7 +9,7 @@ import {
 } from 'react-router'
 
 import type { Route } from './+types/root'
-import stylesheet from './app.css?url'
+import stylesheet from '~/styles/globals.css?url'
 import { useEffect } from 'react'
 import toast, { Toaster } from 'react-hot-toast'
 import { getSession } from './sessions.server'
@@ -23,7 +23,7 @@ export const links: Route.LinksFunction = () => [
   },
   {
     rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    href: 'https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap',
   },
   { rel: 'stylesheet', href: stylesheet },
 ]
@@ -55,7 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body className="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         {children}
         <Toaster />
         <ScrollRestoration />

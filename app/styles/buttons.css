@@ -1,0 +1,21 @@
+@layer components {
+  .btn {
+    @apply flex justify-center items-center gap-3 px-4 py-2 rounded-full font-bold text-white disabled:opacity-30;
+  }
+
+  .btn-icon {
+    @apply grid place-content-center size-10 rounded-full disabled:opacity-30;
+  }
+
+  .btn-primary {
+    @apply bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900;
+  }
+
+  .btn-secondary {
+    @apply border-2 border-gray-900 text-gray-900 dark:border-gray-100 dark:text-gray-100;
+
+    &.btn-danger {
+      @apply border-red-700 text-red-700;
+    }
+  }
+}
